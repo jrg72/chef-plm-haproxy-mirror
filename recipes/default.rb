@@ -18,10 +18,21 @@
 #
 
 package 'haproxy'
-package 'haproxyctl'
-package 'hatop'
 
-directory '/etc/ssl/private/haproxy' do
+case node[:platform]
+  when "centos"
+    ssl_dir = '/etc/pki/tls/private/haproxy'
+  when "debian"
+    package 'haproxyctl'
+    package 'hatop'
+    ssl_dir = '/etc/ssl/private/haproxy'
+  when "ubuntu"
+    package 'haproxyctl'
+    package 'hatop'
+    ssl_dir = '/etc/ssl/private/haproxy'
+end
+
+directory ssl_dir do
   action :create
   owner 'root'
   group 'sysadmin'
