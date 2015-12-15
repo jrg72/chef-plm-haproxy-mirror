@@ -1,0 +1,14 @@
+{
+  "id": "test",
+  "ssh_keys": [
+    "ssh-rsa TESTDATA"
+  ],
+  "groups": [
+    "sysadmin",
+    "deploy"
+  ],
+  "shell": "/bin/bash",
+  "comment": "Test user",
+  "action": "create"
+}
+
