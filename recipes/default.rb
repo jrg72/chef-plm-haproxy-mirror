@@ -17,6 +17,7 @@
 # limitations under the License.
 #
 
+include_recipe 'plm::default'
 package 'haproxy'
 
 case node[:platform]

@@ -7,3 +7,4 @@ long_description 'Installs/Configures plm-haproxy'
 version          '0.1.0'
 
 depends "haproxy-ng"
+depends 'plm', '~> 0.1'
