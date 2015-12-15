@@ -1,0 +1,41 @@
+global
+  maxconn 4096
+  daemon
+  user haproxy
+  group haproxy
+  log 127.0.0.1 local0 debug
+  stats socket /tmp/haproxysock user haproxy group sysadmin mode 770 level admin
+
+defaults
+  mode    http
+  retries 3
+  maxconn 2000
+  option redispatch
+  option httpclose
+  option httplog
+  timeout  connect 5s
+  timeout  client 30s
+  timeout  server 30s
+  timeout  queue  60s
+
+listen front2 0.0.0.0:443
+  mode http
+  balance roundrobin
+  option httpchk
+  option forwardfor
+  option http-pretend-keepalive
+  <% @servers.each do |server| %>
+  server <%= server['name'] %> <%= server['ip'] %>:<%= server['port'] %> maxconn <%= server['maxconn'] %> weight <%= server['weight'] %>
+  <% end %>
+  log global
+
+listen front2 0.0.0.0:80
+  mode http
+  balance roundrobin
+  option httpchk
+  option forwardfor
+  option http-pretend-keepalive
+  <% @servers.each do |server| %>
+  server <%= server['name'] %> <%= server['ip'] %>:<%= server['port'] %> maxconn <%= server['maxconn'] %> weight <%= server['weight'] %>
+  <% end %>
+  log global

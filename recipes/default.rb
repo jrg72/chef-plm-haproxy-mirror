@@ -40,12 +40,13 @@ directory ssl_dir do
   mode '0440'
 end
 
-cookbook_file '/etc/haproxy/haproxy.cfg' do
+template '/etc/haproxy/haproxy.cfg' do
   action :create
   owner 'root'
   group 'sysadmin'
   mode '0640'
-  source 'haproxy.cfg'
+  source 'haproxy.cfg.erb'
+  variables(servers: node['haproxy']['servers'])
   notifies :restart, 'service[haproxy]', :delayed
 end
 
