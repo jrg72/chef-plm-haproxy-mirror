@@ -1,6 +1,6 @@
 #
 # Cookbook Name:: plm-haproxy
-# Recipe:: default
+# Recipe:: init
 #
 # Copyright (C) 2015 PatientsLikeMe, Inc.
 #
@@ -21,47 +21,26 @@ include_recipe 'plm::default'
 package 'haproxy'
 
 case node[:platform]
-  when "centos"
-    ssl_dir = '/etc/pki/tls/private/haproxy'
-  when "debian"
+  when 'centos'
+    node.default['haproxy']['ssl_dir'] = '/etc/pki/tls/private/haproxy'
+  when 'debian'
     package 'haproxyctl'
     package 'hatop'
-    ssl_dir = '/etc/ssl/private/haproxy'
-  when "ubuntu"
+    node.default['haproxy']['ssl_dir'] = '/etc/ssl/private/haproxy'
+  when 'ubuntu'
     package 'haproxyctl'
     package 'hatop'
-    ssl_dir = '/etc/ssl/private/haproxy'
+    node.default['haproxy']['ssl_dir'] = '/etc/ssl/private/haproxy'
 end
 
-directory ssl_dir do
+directory node['haproxy']['ssl_dir'] do
   action :create
   owner 'root'
   group 'sysadmin'
   mode '0440'
 end
 
-template '/etc/haproxy/haproxy.cfg' do
-  action :create
-  owner 'root'
-  group 'sysadmin'
-  mode '0640'
-  source 'haproxy.cfg.erb'
-  variables(servers: node['haproxy']['servers'])
-  notifies :restart, 'service[haproxy]', :delayed
-end
-
-# template '/etc/ssl/private/haproxy.pem' do
-#   action :create
-#   owner 'root'
-#   group 'root'
-#   mode '0400'
-#   source 'haproxy_keys.pem'
-#   notifies :restart, 'service[haproxy]', :delayed
-# end
-
 service 'haproxy' do
   action :enable
   supports :restart => true, :reload => true, :status => true
 end
-  
-

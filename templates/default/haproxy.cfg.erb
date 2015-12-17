@@ -13,29 +13,28 @@ defaults
   option redispatch
   option httpclose
   option httplog
+  option httpchk
+  option forwardfor
+  option http-pretend-keepalive
   timeout  connect 5s
   timeout  client 30s
   timeout  server 30s
   timeout  queue  60s
-
-listen front2 0.0.0.0:443
-  mode http
+  log global
   balance roundrobin
-  option httpchk
-  option forwardfor
-  option http-pretend-keepalive
+
+frontend www-http
+  bind 0.0.0.0:80
+  reqadd X-Forwarded-Proto:\ http
+  default_backend www-backend
+
+frontend www-https
+  bind 0.0.0.0:443 ssl crt <%= @node['haproxy']['ssl_dir'] %>/cert.pem ca-file /etc/pki/tls/certs/ca-bundle.trust.crt
+  reqadd X-Forwarded-Proto:\ https
+  default_backend www-backend
+
+backend www-backend
+  redirect scheme https if !{ ssl_fc }
   <% @servers.each do |server| %>
   server <%= server['name'] %> <%= server['ip'] %>:<%= server['port'] %> maxconn <%= server['maxconn'] %> weight <%= server['weight'] %>
   <% end %>
-  log global
-
-listen front2 0.0.0.0:80
-  mode http
-  balance roundrobin
-  option httpchk
-  option forwardfor
-  option http-pretend-keepalive
-  <% @servers.each do |server| %>
-  server <%= server['name'] %> <%= server['ip'] %>:<%= server['port'] %> maxconn <%= server['maxconn'] %> weight <%= server['weight'] %>
-  <% end %>
-  log global
