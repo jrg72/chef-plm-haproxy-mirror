@@ -4,4 +4,4 @@ metadata
 
 cookbook 'plm', path: '../plm'
 cookbook 'plm-centos', path: '../plm-centos'
-cookbook 'plm-apt', path: '../plm-apt'
+cookbook 'plm-apt-repos', path: '../plm-apt-repos'
