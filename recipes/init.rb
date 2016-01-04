@@ -19,6 +19,7 @@
 
 include_recipe 'plm::default'
 package 'haproxy'
+package 'socat'
 
 case node[:platform]
   when 'centos'
