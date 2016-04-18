@@ -10,10 +10,10 @@ platforms:
   - name: centos-6.7
 
 suites:
-  - name: plm_website
+  - name: default
     data_bags_path: "test/integration/data_bags"
     run_list:
-        - recipe[plm-haproxy::plm_website]
+        - recipe[plm-haproxy::default]
     attributes:
         haproxy:
             servers:

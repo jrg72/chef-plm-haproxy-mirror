@@ -1,6 +1,6 @@
-source "https://supermarket.chef.io"
+source 'https://supermarket.chef.io'
 
 metadata
 
-cookbook 'plm', path: '../plm'
-cookbook 'plm-centos', path: '../plm-centos'
+cookbook 'plm', git: 'git@github.com:patientslikeme/chef-plm_base.git'
+cookbook 'plm-centos', git: 'git@github.com:patientslikeme/chef-plm-centos.git'

@@ -2,7 +2,7 @@ require 'minitest/autorun'
 
 describe 'recipe::plm_haproxy::default' do
   it 'has an haproxy config' do
-    assert File.exists?('/etc/haproxy/haproxy.cfg')
+    assert File.exist?('/etc/haproxy/haproxy.cfg')
   end
 
   it 'has servers from attributes in config' do

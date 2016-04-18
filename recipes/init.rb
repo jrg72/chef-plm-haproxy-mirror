@@ -21,17 +21,17 @@ include_recipe 'plm::default'
 package 'haproxy'
 package 'socat'
 
-case node[:platform]
-  when 'centos'
-    node.default['haproxy']['ssl_dir'] = '/etc/pki/tls/private/haproxy'
-  when 'debian'
-    package 'haproxyctl'
-    package 'hatop'
-    node.default['haproxy']['ssl_dir'] = '/etc/ssl/private/haproxy'
-  when 'ubuntu'
-    package 'haproxyctl'
-    package 'hatop'
-    node.default['haproxy']['ssl_dir'] = '/etc/ssl/private/haproxy'
+case node['platform']
+when 'centos'
+  node.default['haproxy']['ssl_dir'] = '/etc/pki/tls/private/haproxy'
+when 'debian'
+  package 'haproxyctl'
+  package 'hatop'
+  node.default['haproxy']['ssl_dir'] = '/etc/ssl/private/haproxy'
+when 'ubuntu'
+  package 'haproxyctl'
+  package 'hatop'
+  node.default['haproxy']['ssl_dir'] = '/etc/ssl/private/haproxy'
 end
 
 directory node['haproxy']['ssl_dir'] do
@@ -43,5 +43,5 @@ end
 
 service 'haproxy' do
   action :enable
-  supports :restart => true, :reload => true, :status => true
+  supports restart: true, reload: true, status: true
 end

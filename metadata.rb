@@ -6,5 +6,8 @@ description      'Installs/Configures plm-haproxy'
 long_description 'Installs/Configures plm-haproxy'
 version          '0.1.2'
 
-depends "haproxy-ng"
+issues_url       'https://github.com/patientslikeme/chef-plm-haproxy/issues' if respond_to?(:issues_url)
+source_url       'https://github.com/patientslikeme/chef-plm-haproxy' if respond_to?(:source_url)
+
+depends 'haproxy-ng'
 depends 'plm', '~> 0.1'
