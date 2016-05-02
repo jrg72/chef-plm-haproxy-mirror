@@ -1,0 +1,54 @@
+{
+  "name": "plm-website-dev",
+  "default_attributes": {
+    "plm-webapp": {
+        "user": "www",
+        "group": "www",
+        "app_name": "plm",
+        "background": true,
+        "memcached": {
+            "min_ratio": 0.1,
+            "min_absolute_mb": 4096
+        },
+        "rails": {
+            "env": "production"
+        }
+    },
+    "plm-website": {
+        "elastic_search": {
+            "host": "127.0.0.1",
+            "port": "9200",
+            "namespace": "plm_production_alias"
+        },
+        "redis": {
+            "host": "127.0.0.1",
+            "port": "6379"
+        },
+        "redis-feeds": {
+            "host": "127.0.0.1",
+            "port": "6379"
+        },
+        "memcached_nodes": [
+             "127.0.0.1"
+        ],
+        "resque": {
+            "workers": [
+             "\"\\\\\\\\*\""
+            ]
+        },
+        "db": {
+            "user": "patientowner",
+            "host": "127.0.0.1",
+            "database": "KIRJE"
+        }
+    },
+    "plm-haproxy": {
+        "global": {
+            "user": "haproxy",
+            "group": "haproxy",
+            "log": "127.0.0.1 local0 debug",
+            "stats": "socket /tmp/haproxysock user haproxy group haproxy mode 700 level admin"
+        }
+    }     
+  }
+}
