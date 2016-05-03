@@ -7,12 +7,12 @@ provisioner:
   environments_path: test/environments
   data_bags_path: test/data_bags
   client_rb:
-    environment: plm-website-dev
+    environment: plm-haproxy-test
 
 platforms:
   - name: centos-6.7
 
 suites:
   - name: default
-    environment: "plm-website-dev"
+    environment: plm-haproxy-test
     run_list: "plm-haproxy::default"

@@ -28,6 +28,10 @@ end
 # Set up the app backend pool
 
 app_servers = []
+log 'servers' do
+  message node['plm-haproxy']['app'].to_s
+end
+
 node['plm-haproxy']['app']['servers'].each do |server|
   app_servers << {
     'name' => server['name'],
