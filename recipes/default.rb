@@ -72,7 +72,7 @@ haproxy_frontend 'www-https' do
   default_backend 'app'
 end
 
-proxies = node['haproxy']['proxies'].map do |p|
+proxies = node['plm-haproxy']['proxies'].map do |p|
   Haproxy::Helpers.proxy(p, run_context)
 end
 
