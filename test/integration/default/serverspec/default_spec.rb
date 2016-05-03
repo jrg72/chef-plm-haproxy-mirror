@@ -15,3 +15,11 @@ describe service('haproxy') do
   it { should be_enabled }
   it { should be_running }
 end
+
+ports = [80, 443]
+
+ports.each do |port|
+  describe port(port) do
+    it { should be_listening }
+  end
+end

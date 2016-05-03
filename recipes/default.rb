@@ -12,6 +12,7 @@ haproxy_defaults 'HTTP' do
     'retries 3',
     'option redispatch',
     'option forwardfor',
+    'option http-server-close',
     'maxconn 2000',
     'option httplog',
     'timeout connect 5s',
@@ -41,16 +42,29 @@ end
 
 haproxy_backend 'app' do
   mode 'http'
-  balance 'roundrobin'
+  balance node['plm-haproxy']['balance']
   config [
-    'option httpchk'
+    'option httpchk',
+    'redirect scheme https code 301 if !{ ssl_fc }'
   ]
   servers app_servers
 end
 
-haproxy_frontend 'www' do
+haproxy_frontend 'www-http' do
   mode 'http'
   bind '*:80'
+  config [
+    'reqadd X-Forwarded-Proto:\ http'
+  ]
+  default_backend 'app'
+end
+
+haproxy_frontend 'www-https' do
+  mode 'http'
+  bind "*:443 ssl crt #{node['plm-haproxy']['ssl_dir']}/cert.pem"
+  config [
+    'reqadd X-Forwarded-Proto:\ https'
+  ]
   default_backend 'app'
 end
 
@@ -71,6 +85,16 @@ haproxy_instance 'haproxy' do
     'maxconn 4096'
   ]
   action :create
+end
+
+cert = data_bag_item('ssl_certs', 'www.patientslikeme.com')
+
+file "#{node['plm-haproxy']['ssl_dir']}/cert.pem" do
+  action :create
+  owner 'root'
+  group 'root'
+  mode '0440'
+  content cert['key'] + cert['crt'] + cert['ca-bundle']
 end
 
 include_recipe 'haproxy-ng::service'

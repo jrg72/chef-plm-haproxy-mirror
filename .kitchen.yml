@@ -5,6 +5,7 @@ driver:
 provisioner:
   name: chef_zero
   environments_path: test/environments
+  data_bags_path: test/data_bags
   client_rb:
     environment: plm-website-dev
 
