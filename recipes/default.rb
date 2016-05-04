@@ -15,11 +15,11 @@ haproxy_defaults 'HTTP' do
     'option http-server-close',
     'maxconn 2000',
     'option httplog',
-    'timeout connect 5s',
-    'timeout client 30s',
-    'timeout server 30s',
+    "timeout connect #{node['plm-haproxy']['connect_timeout'] || '5s'}",
+    "timeout client #{node['plm-haproxy']['client_timeout'] || '120s'}",
+    "timeout server #{node['plm-haproxy']['server_timeout'] || '120s'}",
     'timeout queue 60s',
-    'stats uri /haproxy/stats',
+    "stats uri /haproxy/stats",
     'stats auth admin:passwordhere',
     'log global'
   ]
@@ -43,7 +43,7 @@ end
 
 haproxy_backend 'app' do
   mode 'http'
-  balance node['plm-haproxy']['backends']['app']['balance']
+  balance node['plm-haproxy']['backends']['app']['balance'] if node['plm-haproxy']['backends']['app']['balance']
   config [
     'option httpchk',
     'redirect scheme https code 301 if !{ ssl_fc }'

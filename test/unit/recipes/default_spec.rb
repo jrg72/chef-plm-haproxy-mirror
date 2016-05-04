@@ -17,8 +17,8 @@ describe 'plm-haproxy::default' do
         }
       ]
       runner.node.set['plm-haproxy']['frontends']['www-http']['default_backend'] = 'app'
-      runner.node.set['plm-haproxy']['ssl_dir'] = '/etc/pki/tls/private'
       runner.node.set['plm-haproxy']['frontends']['www-https']['site'] = 'www.patientslikeme.com'
+      runner.node.set['plm-haproxy']['ssl_dir'] = '/etc/pki/tls/private'
       runner.node.set['plm-haproxy']['proxies'] = %w( HTTP app www-http www-https )
 
       ssl_certs_databag = {
@@ -35,6 +35,10 @@ describe 'plm-haproxy::default' do
 
     it 'converges successfully' do
       expect { chef_run }.to_not raise_error
+    end
+
+    it 'creates a cert' do
+      expect(chef_run).to render_file('/etc/pki/tls/private/www.patientslikeme.com-cert.pem')
     end
   end
 end
