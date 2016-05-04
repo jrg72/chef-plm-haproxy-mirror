@@ -90,7 +90,7 @@ end
 
 sites = []
 
-node['plm-haproxy']['frontends'].each do |name,frontend|
+node['plm-haproxy']['frontends'].each do |_name, frontend|
   next unless frontend['site']
   sites.push(frontend['site'])
 end
