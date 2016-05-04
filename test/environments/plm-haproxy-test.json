@@ -48,6 +48,7 @@
       }
     },
     "plm-haproxy": {
+      "maxconn": "4096",
       "user": "haproxy",
       "group": "haproxy",
       "ssl_dir": "/etc/pki/tls/private",
@@ -58,20 +59,32 @@
         "www-http",
         "www-https"
       ],
-      "app": {
-        "servers": [
-          {
-            "name": "app1",
-            "address": "22.34.56.78"
+      "backends": {
+        "app": {
+          "servers": [
+            {
+              "name": "app1",
+              "address": "22.34.56.78"
+            },
+            {
+              "name": "app2",
+              "address": "22.34.56.79"
+            }
+          ],
+          "port": "8080",
+          "config": "maxconn 16 weight 50",
+          "balance": "roundrobin"
+        }
+      },
+      "frontends": {
+        "www-http": {
+          "default_backend": "app"
           },
-          {
-            "name": "app2",
-            "address": "22.34.56.79"
-          }
-        ],
-        "port": "8080",
-        "config": "maxconn 16 weight 50"
-      }
+        "www-https": {
+          "default_backend": "app",
+          "site": "www.patientslikeme.com"
+        }
+      }    
     }
   }
 }

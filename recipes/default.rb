@@ -7,7 +7,7 @@ include_recipe 'haproxy-ng::install'
 
 haproxy_defaults 'HTTP' do
   mode 'http'
-  balance 'roundrobin'
+  balance node['plm-haproxy']['balance']
   config [
     'retries 3',
     'option redispatch',
@@ -28,16 +28,13 @@ end
 # Set up the app backend pool
 
 app_servers = []
-log 'servers' do
-  message node['plm-haproxy']['app'].to_s
-end
 
-node['plm-haproxy']['app']['servers'].each do |server|
+node['plm-haproxy']['backends']['app']['servers'].each do |server|
   app_servers << {
     'name' => server['name'],
     'address' => server['address'],
-    'port' => node['plm-haproxy']['app']['port'],
-    'config' => node['plm-haproxy']['app']['config']
+    'port' => node['plm-haproxy']['backends']['app']['port'],
+    'config' => node['plm-haproxy']['backends']['app']['config']
   }
 end
 
@@ -46,7 +43,7 @@ end
 
 haproxy_backend 'app' do
   mode 'http'
-  balance node['plm-haproxy']['balance']
+  balance node['plm-haproxy']['backends']['app']['balance']
   config [
     'option httpchk',
     'redirect scheme https code 301 if !{ ssl_fc }'
@@ -60,16 +57,16 @@ haproxy_frontend 'www-http' do
   config [
     'reqadd X-Forwarded-Proto:\ http'
   ]
-  default_backend 'app'
+  default_backend node['plm-haproxy']['frontends']['www-http']['default_backend']
 end
 
 haproxy_frontend 'www-https' do
   mode 'http'
-  bind "*:443 ssl crt #{node['plm-haproxy']['ssl_dir']}/cert.pem"
+  bind "*:443 ssl crt #{node['plm-haproxy']['ssl_dir']}/#{node['plm-haproxy']['frontends']['www-https']['site']}-cert.pem"
   config [
     'reqadd X-Forwarded-Proto:\ https'
   ]
-  default_backend 'app'
+  default_backend node['plm-haproxy']['frontends']['www-https']['default_backend']
 end
 
 proxies = node['plm-haproxy']['proxies'].map do |p|
@@ -86,19 +83,28 @@ haproxy_instance 'haproxy' do
     "stats socket /tmp/haproxysock user #{node['plm-haproxy']['user']} group #{node['plm-haproxy']['group']} mode 700 level admin"
   ]
   tuning [
-    'maxconn 4096'
+    "maxconn #{node['plm-haproxy']['maxconn']}"
   ]
   action :create
 end
 
-cert = data_bag_item('ssl_certs', 'www.patientslikeme.com')
+sites = []
 
-file "#{node['plm-haproxy']['ssl_dir']}/cert.pem" do
-  action :create
-  owner 'root'
-  group 'root'
-  mode '0440'
-  content cert['key'] + cert['crt'] + cert['ca-bundle']
+node['plm-haproxy']['frontends'].each do |name,frontend|
+  next unless frontend['site']
+  sites.push(frontend['site'])
+end
+
+sites.each do |site|
+  cert = data_bag_item('ssl_certs', site)
+
+  file "#{node['plm-haproxy']['ssl_dir']}/#{site}-cert.pem" do
+    action :create
+    owner 'root'
+    group 'root'
+    mode '0440'
+    content cert['key'] + cert['crt'] + cert['ca-bundle']
+  end
 end
 
 include_recipe 'haproxy-ng::service'
