@@ -19,7 +19,7 @@ haproxy_defaults 'HTTP' do
     "timeout client #{node['plm-haproxy']['client_timeout'] || '120s'}",
     "timeout server #{node['plm-haproxy']['server_timeout'] || '120s'}",
     'timeout queue 60s',
-    "stats uri /haproxy/stats",
+    'stats uri /haproxy/stats',
     'stats auth admin:passwordhere',
     'log global'
   ]
@@ -38,6 +38,19 @@ node['plm-haproxy']['backends']['app']['servers'].each do |server|
   }
 end
 
+# Set up the static backend pool
+
+static_servers = []
+
+node['plm-haproxy']['backends']['static']['servers'].each do |server|
+  static_servers << {
+    'name' => server['name'],
+    'address' => server['address'],
+    'port' => node['plm-haproxy']['backends']['static']['port'],
+    'config' => node['plm-haproxy']['backends']['static']['config']
+  }
+end
+
 # Backend and frontend.  If we do more with this, we should
 # break these out into another recipe
 
@@ -49,6 +62,16 @@ haproxy_backend 'app' do
     'redirect scheme https code 301 if !{ ssl_fc }'
   ]
   servers app_servers
+end
+
+haproxy_backend 'static' do
+  mode 'http'
+  balance node['plm-haproxy']['backends']['static']['balance'] if node['plm-haproxy']['backends']['static']['balance']
+  config [
+    'option httpchk',
+    'redirect scheme https code 301 if !{ ssl_fc }'
+  ]
+  servers static_servers
 end
 
 haproxy_frontend 'www-http' do

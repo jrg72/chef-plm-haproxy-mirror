@@ -56,6 +56,7 @@
       "proxies": [
         "HTTP",
         "app",
+        "static",
         "www-http",
         "www-https"
       ],
@@ -69,6 +70,21 @@
             {
               "name": "app2",
               "address": "22.34.56.79"
+            }
+          ],
+          "port": "8080",
+          "config": "maxconn 16 weight 50",
+          "balance": "roundrobin"
+        },
+        "static": {
+          "servers": [
+            {
+              "name": "static1",
+              "address": "44.55.66.77"
+            },
+            {
+              "name": "static2",
+              "address": "77.66.55.44"
             }
           ],
           "port": "8080",
