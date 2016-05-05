@@ -52,6 +52,7 @@
       "user": "haproxy",
       "group": "haproxy",
       "ssl_dir": "/etc/pki/tls/private",
+      "errorloc": "https://www.patientslikeme.com/maintenance.html",
       "balance": "roundrobin",
       "proxies": [
         "HTTP",

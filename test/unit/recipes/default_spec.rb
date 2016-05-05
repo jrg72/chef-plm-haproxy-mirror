@@ -16,6 +16,12 @@ describe 'plm-haproxy::default' do
           'address' => '32.34.56.78'
         }
       ]
+      runner.node.set['plm-haproxy']['backends']['static']['servers'] = [
+        {
+          'name' => 'static1',
+          'address' => '44.55.66.77'
+        }
+      ]
       runner.node.set['plm-haproxy']['frontends']['www-http']['default_backend'] = 'app'
       runner.node.set['plm-haproxy']['frontends']['www-https']['site'] = 'www.patientslikeme.com'
       runner.node.set['plm-haproxy']['ssl_dir'] = '/etc/pki/tls/private'

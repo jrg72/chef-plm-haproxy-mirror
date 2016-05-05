@@ -78,7 +78,8 @@ haproxy_frontend 'www-http' do
   mode 'http'
   bind '*:80'
   config [
-    'reqadd X-Forwarded-Proto:\ http'
+    'reqadd X-Forwarded-Proto:\ http',
+    "errorloc 503 #{node['plm-haproxy']['errorloc']}"
   ]
   default_backend node['plm-haproxy']['frontends']['www-http']['default_backend']
 end
@@ -87,7 +88,8 @@ haproxy_frontend 'www-https' do
   mode 'http'
   bind "*:443 ssl crt #{node['plm-haproxy']['ssl_dir']}/#{node['plm-haproxy']['frontends']['www-https']['site']}-cert.pem"
   config [
-    'reqadd X-Forwarded-Proto:\ https'
+    'reqadd X-Forwarded-Proto:\ https',
+    "errorloc 503 #{node['plm-haproxy']['errorloc']}"
   ]
   default_backend node['plm-haproxy']['frontends']['www-https']['default_backend']
 end
