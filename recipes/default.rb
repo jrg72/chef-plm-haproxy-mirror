@@ -5,6 +5,17 @@
 # Copyright (c) 2016 PatientsLikeMe, All Rights Reserved.
 include_recipe 'haproxy-ng::install'
 
+service 'rsyslog' do
+  action [:nothing]
+end
+
+cookbook_file '/etc/rsyslog.d/haproxy.conf' do
+  source 'rsyslog_conf'
+  owner 'root'
+  group 'root'
+  notifies :restart, 'service[rsyslog]', :delayed
+end
+
 haproxy_defaults 'HTTP' do
   mode 'http'
   balance node['plm-haproxy']['balance']
