@@ -105,7 +105,7 @@ haproxy_instance 'haproxy' do
     "user #{node['plm-haproxy']['user']}",
     "group #{node['plm-haproxy']['group']}",
     'log 127.0.0.1 local0 debug',
-    "stats socket /tmp/haproxysock user #{node['plm-haproxy']['user']} group #{node['plm-haproxy']['group']} mode 700 level admin"
+    "stats socket /tmp/haproxysock user #{node['plm-haproxy']['user']} group #{node['plm-haproxy']['group']} mode 770 level admin"
   ]
   tuning [
     "maxconn #{node['plm-haproxy']['maxconn']}"
