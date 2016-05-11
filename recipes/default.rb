@@ -36,6 +36,9 @@ haproxy_defaults 'HTTP' do
   ]
 end
 
+include_recipe 'yum-epel' if node['platform_family'] == 'rhel'
+package 'socat'
+
 # Set up the app backend pool
 
 app_servers = []
