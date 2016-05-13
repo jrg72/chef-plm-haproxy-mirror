@@ -22,13 +22,11 @@ describe 'plm-haproxy::default' do
           'address' => '44.55.66.77'
         }
       ]
-      runner.node.set['plm-haproxy']['frontends']['www-http']['default_backend'] = 'app'
-      runner.node.set['plm-haproxy']['frontends']['www-https']['site'] = 'www.patientslikeme.com'
+      runner.node.set['plm-haproxy']['frontend']['site'] = 'www.example.com'
       runner.node.set['plm-haproxy']['ssl_dir'] = '/etc/pki/tls/private'
-      runner.node.set['plm-haproxy']['proxies'] = %w( HTTP app www-http www-https )
 
       ssl_certs_databag = {
-        'www.patientslikeme.com' => {
+        'www.example.com' => {
           'key' => 'key',
           'crt' => 'crt',
           'ca-bundle' => 'ca-bundle'
@@ -44,7 +42,7 @@ describe 'plm-haproxy::default' do
     end
 
     it 'creates a cert' do
-      expect(chef_run).to render_file('/etc/pki/tls/private/www.patientslikeme.com-cert.pem')
+      expect(chef_run).to render_file('/etc/pki/tls/private/www.example.com-cert.pem')
     end
   end
 end
