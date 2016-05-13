@@ -10,3 +10,4 @@ issues_url       'https://github.com/patientslikeme/chef-plm-haproxy/issues' if 
 source_url       'https://github.com/patientslikeme/chef-plm-haproxy' if respond_to?(:source_url)
 
 depends 'haproxy-ng'
+depends 'yum-epel'
