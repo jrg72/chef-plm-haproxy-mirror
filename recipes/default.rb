@@ -3,7 +3,6 @@
 # Recipe:: default
 #
 # Copyright (c) 2016 PatientsLikeMe, All Rights Reserved.
-include_recipe 'haproxy-ng::install'
 
 service 'rsyslog' do
   action [:nothing]
@@ -15,6 +14,9 @@ cookbook_file '/etc/rsyslog.d/haproxy.conf' do
   group 'root'
   notifies :restart, 'service[rsyslog]', :delayed
 end
+
+include_recipe 'yum-epel' if node['platform_family'] == 'rhel'
+package 'socat'
 
 haproxy_defaults 'HTTP' do
   mode 'http'
@@ -36,115 +38,102 @@ haproxy_defaults 'HTTP' do
   ]
 end
 
-include_recipe 'yum-epel' if node['platform_family'] == 'rhel'
-package 'socat'
-
-# Set up the app backend pool
-
-app_servers = []
-
-node['plm-haproxy']['backends']['app']['servers'].each do |server|
-  app_servers << {
-    'name' => server['name'],
-    'address' => server['address'],
-    'port' => node['plm-haproxy']['backends']['app']['port'],
-    'config' => node['plm-haproxy']['backends']['app']['config']
-  }
-end
-
-# Set up the static backend pool
-
-static_servers = []
-
-node['plm-haproxy']['backends']['static']['servers'].each do |server|
-  static_servers << {
-    'name' => server['name'],
-    'address' => server['address'],
-    'port' => node['plm-haproxy']['backends']['static']['port'],
-    'config' => node['plm-haproxy']['backends']['static']['config']
-  }
-end
-
-# Backend and frontend.  If we do more with this, we should
-# break these out into another recipe
-
 haproxy_backend 'app' do
   mode 'http'
   balance node['plm-haproxy']['backends']['app']['balance'] if node['plm-haproxy']['backends']['app']['balance']
+
   config [
-    'option httpchk',
-    'redirect scheme https code 301 if !{ ssl_fc }'
+    'option httpchk'
   ]
-  servers app_servers
+
+  servers node['plm-haproxy']['backends']['app']['servers'].map { |server|
+    {
+      'name' => server['name'],
+      'address' => server['address'],
+      'port' => node['plm-haproxy']['backends']['app']['port'],
+      'config' => server['config']
+    }
+  }
 end
 
 haproxy_backend 'static' do
   mode 'http'
   balance node['plm-haproxy']['backends']['static']['balance'] if node['plm-haproxy']['backends']['static']['balance']
+
   config [
-    'option httpchk',
-    'redirect scheme https code 301 if !{ ssl_fc }'
+    'option httpchk'
   ]
-  servers static_servers
+
+  servers node['plm-haproxy']['backends']['static']['servers'].map { |server|
+    {
+      'name' => server['name'],
+      'address' => server['address'],
+      'port' => node['plm-haproxy']['backends']['static']['port'],
+      'config' => server['config']
+    }
+  }
 end
 
-haproxy_frontend 'www-http' do
+haproxy_frontend 'front' do
   mode 'http'
-  bind '*:80'
-  config [
-    'reqadd X-Forwarded-Proto:\ http',
-    "errorloc 503 #{node['plm-haproxy']['errorloc']}"
+  bind [
+    '*:80',
+    "*:443 ssl crt #{node['plm-haproxy']['ssl_dir']}/#{node['plm-haproxy']['frontend']['site']}-cert.pem"
   ]
-  default_backend node['plm-haproxy']['frontends']['www-http']['default_backend']
+  default_backend 'app'
+
+  acls [
+    {
+      'name' => 'app_not_enough_capacity',
+      'criterion' => 'nbsrv(app) eq 0'
+    },
+    {
+      'name' => 'maintenance',
+      'criterion' => 'path eq /maintenance.html'
+    },
+    {
+      'name' => 'static_content',
+      'criterion' => 'path_end -i .jpg .png .gif .css .js .woff'
+    }
+  ]
+
+  config_tail [
+    'redirect scheme https code 301 if !{ ssl_fc }',
+    'redirect location /maintenance.html code 302 if app_not_enough_capacity !maintenance !static_content'
+  ]
+
+  use_backends [
+    {
+      'backend' => 'static',
+      'condition' => 'if app_not_enough_capacity'
+    }
+  ]
 end
 
-haproxy_frontend 'www-https' do
-  mode 'http'
-  bind "*:443 ssl crt #{node['plm-haproxy']['ssl_dir']}/#{node['plm-haproxy']['frontends']['www-https']['site']}-cert.pem"
-  config [
-    'reqadd X-Forwarded-Proto:\ https',
-    "errorloc 503 #{node['plm-haproxy']['errorloc']}"
-  ]
-  default_backend node['plm-haproxy']['frontends']['www-https']['default_backend']
-end
+site = node['plm-haproxy']['frontend']['site']
+cert = data_bag_item('ssl_certs', site)
 
-proxies = node['plm-haproxy']['proxies'].map do |p|
-  Haproxy::Helpers.proxy(p, run_context)
-end
-
-haproxy_instance 'haproxy' do
-  proxies proxies
-  config [
-    'daemon',
-    "user #{node['plm-haproxy']['user']}",
-    "group #{node['plm-haproxy']['group']}",
-    'log 127.0.0.1 local0 debug',
-    "stats socket /tmp/haproxysock user #{node['plm-haproxy']['user']} group #{node['plm-haproxy']['group']} mode 770 level admin",
-    'ssl-server-verify none'
-  ]
-  tuning [
-    "maxconn #{node['plm-haproxy']['maxconn']}"
-  ]
+file "#{node['plm-haproxy']['ssl_dir']}/#{site}-cert.pem" do
   action :create
+  owner 'root'
+  group 'root'
+  mode '0440'
+  content cert['key'] + cert['crt'] + cert['ca-bundle']
 end
 
-sites = []
+node.default['haproxy']['config'] = [
+  'daemon',
+  "user #{node['plm-haproxy']['user']}",
+  "group #{node['plm-haproxy']['group']}",
+  'log 127.0.0.1 local0 debug',
+  "stats socket /tmp/haproxysock user #{node['plm-haproxy']['user']} group #{node['plm-haproxy']['group']} mode 770 level admin",
+  'ssl-server-verify none'
+]
 
-node['plm-haproxy']['frontends'].each do |_name, frontend|
-  next unless frontend['site']
-  sites.push(frontend['site'])
-end
+node.default['haproxy']['tuning'] = [
+  "maxconn #{node['plm-haproxy']['maxconn']}"
+]
 
-sites.each do |site|
-  cert = data_bag_item('ssl_certs', site)
+node.default['haproxy']['proxies'] = %w(HTTP app static front)
 
-  file "#{node['plm-haproxy']['ssl_dir']}/#{site}-cert.pem" do
-    action :create
-    owner 'root'
-    group 'root'
-    mode '0440'
-    content cert['key'] + cert['crt'] + cert['ca-bundle']
-  end
-end
-
-include_recipe 'haproxy-ng::service'
+include_recipe 'haproxy-ng::default'

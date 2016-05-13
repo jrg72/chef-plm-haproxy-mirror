@@ -1,107 +1,49 @@
 {
-  "name": "plm-website-dev",
+  "name": "plm-haproxy-test",
   "default_attributes": {
-    "plm-webapp": {
-      "user": "www",
-      "group": "www",
-      "app_name": "plm",
-      "background": true,
-      "memcached": {
-        "min_ratio": 0.1,
-        "min_absolute_mb": 4096
-      },
-      "rails": {
-        "env": "production"
-      }
-    },
-    "plm-static": {
-      "apache": {
-        "listen": ["*:1234"]
-      }
-    },
-    "plm-website-env": {
-      "elastic_search": {
-        "host": "127.0.0.1",
-        "port": "9200",
-        "namespace": "plm_production_alias"
-      },
-      "redis": {
-        "host": "127.0.0.1",
-        "port": "6379"
-      },
-      "redis-feeds": {
-        "host": "127.0.0.1",
-        "port": "6379"
-      },
-      "memcached_nodes": [
-        "127.0.0.1"
-      ],
-      "resque": {
-        "workers": [
-          "\"\\\\\\\\*\""
-        ]
-      },
-      "db": {
-        "user": "patientowner",
-        "host": "127.0.0.1",
-        "database": "KIRJE"
-      }
-    },
     "plm-haproxy": {
       "maxconn": "4096",
       "user": "haproxy",
       "group": "haproxy",
       "ssl_dir": "/etc/pki/tls/private",
-      "errorloc": "https://www.patientslikeme.com/maintenance.html",
       "balance": "roundrobin",
-      "proxies": [
-        "HTTP",
-        "app",
-        "static",
-        "www-http",
-        "www-https"
-      ],
       "backends": {
         "app": {
           "servers": [
             {
               "name": "app1",
-              "address": "22.34.56.78"
+              "address": "22.34.56.78",
+              "config": "maxconn 16 weight 50"
             },
             {
               "name": "app2",
-              "address": "22.34.56.79"
+              "address": "22.34.56.79",
+              "config": "maxconn 16 weight 50"
             }
           ],
           "port": "8080",
-          "config": "maxconn 16 weight 50",
           "balance": "roundrobin"
         },
         "static": {
           "servers": [
             {
               "name": "static1",
-              "address": "44.55.66.77"
+              "address": "44.55.66.77",
+              "config": "maxconn 16 weight 50"
             },
             {
               "name": "static2",
-              "address": "77.66.55.44"
+              "address": "77.66.55.44",
+              "config": "maxconn 16 weight 50"
             }
           ],
           "port": "8080",
-          "config": "maxconn 16 weight 50",
           "balance": "roundrobin"
         }
       },
-      "frontends": {
-        "www-http": {
-          "default_backend": "app"
-          },
-        "www-https": {
-          "default_backend": "app",
-          "site": "www.patientslikeme.com"
-        }
-      }    
+      "frontend": {
+        "site": "www.example.com"
+      }
     }
   }
 }
