@@ -98,6 +98,7 @@ haproxy_frontend 'front' do
   ]
 
   config_tail [
+    'http-request set-header X-Forwarded-Proto https if { ssl_fc }',
     'redirect scheme https code 301 if !{ ssl_fc }',
     'redirect location /maintenance.html code 302 if app_not_enough_capacity !maintenance !static_content'
   ]
