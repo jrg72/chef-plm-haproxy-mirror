@@ -18,6 +18,33 @@ end
 include_recipe 'yum-epel' if node['platform_family'] == 'rhel'
 package 'socat'
 
+sites = node['plm-haproxy']['frontend']['sites']
+
+if sites && sites.any?
+  sites.each do |site|
+    cert = data_bag_item('ssl_certs', site)
+
+    file "#{node['plm-haproxy']['ssl_dir']}/#{site}-cert.pem" do
+      action :create
+      owner 'root'
+      group 'root'
+      mode '0440'
+      content cert['key'] + cert['crt'] + cert['ca-bundle']
+    end
+  end
+else
+  site = node['plm-haproxy']['frontend']['site']
+  cert = data_bag_item('ssl_certs', site)
+
+  file "#{node['plm-haproxy']['ssl_dir']}/#{site}-cert.pem" do
+    action :create
+    owner 'root'
+    group 'root'
+    mode '0440'
+    content cert['key'] + cert['crt'] + cert['ca-bundle']
+  end
+end
+
 haproxy_defaults 'HTTP' do
   mode 'http'
   balance node['plm-haproxy']['balance']
@@ -76,10 +103,17 @@ end
 
 haproxy_frontend 'front' do
   mode 'http'
-  bind [
-    '*:80',
-    "*:443 ssl crt #{node['plm-haproxy']['ssl_dir']}/#{node['plm-haproxy']['frontend']['site']}-cert.pem"
-  ]
+  if sites && sites.any?
+    bind [
+      '*:80',
+      "*:443 ssl crt #{node['plm-haproxy']['ssl_dir']}/"
+    ]
+  else
+    bind [
+      '*:80',
+      "*:443 ssl crt #{node['plm-haproxy']['ssl_dir']}/#{node['plm-haproxy']['frontend']['site']}-cert.pem"
+    ]
+  end
   default_backend 'app'
 
   acls [
@@ -109,17 +143,6 @@ haproxy_frontend 'front' do
       'condition' => 'if app_not_enough_capacity'
     }
   ]
-end
-
-site = node['plm-haproxy']['frontend']['site']
-cert = data_bag_item('ssl_certs', site)
-
-file "#{node['plm-haproxy']['ssl_dir']}/#{site}-cert.pem" do
-  action :create
-  owner 'root'
-  group 'root'
-  mode '0440'
-  content cert['key'] + cert['crt'] + cert['ca-bundle']
 end
 
 node.default['haproxy']['config'] = [
