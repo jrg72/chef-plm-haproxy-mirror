@@ -103,17 +103,18 @@ end
 
 haproxy_frontend 'front' do
   mode 'http'
+  binds = ['*:80']
+
   if sites && sites.any?
-    bind [
-      '*:80',
-      "*:443 ssl crt #{node['plm-haproxy']['ssl_dir']}/"
-    ]
+    sites.map do |s|
+      binds.push("*:443 ssl crt #{node['plm-haproxy']['ssl_dir']}/#{s}-cert.pem")
+    end
   else
-    bind [
-      '*:80',
-      "*:443 ssl crt #{node['plm-haproxy']['ssl_dir']}/#{node['plm-haproxy']['frontend']['site']}-cert.pem"
-    ]
+    binds.push("*:443 ssl crt #{node['plm-haproxy']['ssl_dir']}/#{node['plm-haproxy']['frontend']['site']}-cert.pem")
   end
+
+  bind binds
+
   default_backend 'app'
 
   acls [
