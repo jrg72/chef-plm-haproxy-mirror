@@ -106,9 +106,10 @@ haproxy_frontend 'front' do
   binds = ['*:80']
 
   if sites && sites.any?
-    sites.map do |s|
-      binds.push("*:443 ssl crt #{node['plm-haproxy']['ssl_dir']}/#{s}-cert.pem")
+    crts = sites.map do |s|
+      "crt #{node['plm-haproxy']['ssl_dir']}/#{s}-cert.pem"
     end
+    binds.push("*:443 ssl #{crts.join(' ')}")
   else
     binds.push("*:443 ssl crt #{node['plm-haproxy']['ssl_dir']}/#{node['plm-haproxy']['frontend']['site']}-cert.pem")
   end
