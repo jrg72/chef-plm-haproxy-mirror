@@ -1,4 +1,5 @@
 #
+
 # Cookbook Name:: plm-haproxy
 # Recipe:: default
 #
@@ -109,9 +110,9 @@ haproxy_frontend 'front' do
     crts = sites.map do |s|
       "crt #{node['plm-haproxy']['ssl_dir']}/#{s}-cert.pem"
     end
-    binds.push("*:443 ssl #{crts.join(' ')}")
+    binds.push("*:443 ssl #{crts.join(' ')} no-sslv3")
   else
-    binds.push("*:443 ssl crt #{node['plm-haproxy']['ssl_dir']}/#{node['plm-haproxy']['frontend']['site']}-cert.pem")
+    binds.push("*:443 ssl crt #{node['plm-haproxy']['ssl_dir']}/#{node['plm-haproxy']['frontend']['site']}-cert.pem no-sslv3")
   end
 
   bind binds
