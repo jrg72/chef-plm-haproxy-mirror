@@ -9,6 +9,8 @@ end
 
 describe file('/etc/haproxy/haproxy.cfg') do
   it { should be_file }
+  its(:content) { should match(/ssl-default-bind-ciphers ECDHE/) }
+  its(:content) { should match(/ssl-default-server-ciphers ECDHE/) }
 end
 
 describe service('haproxy') do
