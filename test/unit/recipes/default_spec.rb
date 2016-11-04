@@ -74,7 +74,10 @@ describe 'plm-haproxy::default' do
       expect(chef_run).to render_file('/etc/pki/tls/private/www.example.com-cert.pem')
       expect(chef_run).to render_file('/etc/pki/tls/private/www2.example.com-cert.pem')
       expect(chef_run.find_resource(:haproxy_frontend, 'front').bind).to eq(['*:80',
+                                                                             '*:9080 accept-proxy',
                                                                              '*:443 ssl crt /etc/pki/tls/private/www.example.com-cert.pem ' \
+                                                                             'crt /etc/pki/tls/private/www2.example.com-cert.pem no-sslv3',
+                                                                             '*:9443 accept-proxy ssl crt /etc/pki/tls/private/www.example.com-cert.pem ' \
                                                                              'crt /etc/pki/tls/private/www2.example.com-cert.pem no-sslv3'])
     end
   end
